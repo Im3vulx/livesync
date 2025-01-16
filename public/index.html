@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LiveSync</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Carte des positions en temps réel</h1>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Créer la carte
+        const map = L.map('map').setView([51.505, -0.09], 13); // Position par défaut (latitude, longitude)
+
+        // Ajouter les tuiles de carte
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Fonction pour récupérer la position de l'utilisateur
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+
+                // Mettre à jour la carte avec la position de l'utilisateur
+                map.setView([lat, lon], 13);
+
+                // Ajouter un marqueur pour la position actuelle de l'utilisateur
+                L.marker([lat, lon]).addTo(map)
+                    .bindPopup('Vous êtes ici').openPopup();
+
+                // Vous pouvez aussi envoyer la position au serveur si nécessaire
+                fetch('/position', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: 'utilisateur-local',  // Vous pouvez mettre un ID unique pour l'utilisateur
+                        lat: lat,
+                        lon: lon
+                    })
+                }).then(response => response.json())
+                    .then(data => {
+                        console.log('Position envoyée:', data);
+                    }).catch(error => console.error('Erreur:', error));
+
+            }, function (error) {
+                console.error('Erreur de géolocalisation:', error);
+                alert('Impossible d’obtenir la localisation. Assurez-vous que votre géolocalisation est activée.');
+            });
+        } else {
+            alert("La géolocalisation n'est pas supportée par ce navigateur.");
+        }
+
+        // WebSocket pour récupérer les positions en temps réel
+        const socket = new WebSocket("ws://localhost:8080");
+
+        // Gérer la réception des positions
+        socket.onmessage = (event) => {
+            const usersPositions = JSON.parse(event.data);
+
+            // Effacer les marqueurs existants
+            usersPositions.forEach(user => {
+                // Ajouter un nouveau marqueur pour chaque utilisateur
+                L.marker([user.lat, user.lon]).addTo(map)
+                    .bindPopup(`<b>Utilisateur</b><br>ID: ${user.id}<br>Latitude: ${user.lat}<br>Longitude: ${user.lon}`);
+            });
+        };
+
+    </script>
+
+</body>
+
+</html>
