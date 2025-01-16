@@ -6,22 +6,62 @@ const port = 8080;
 
 app.use(express.json());
 
-// Servir le fichier HTML pour l'interface
+// Liste pour stocker les positions des utilisateurs et la dernière mise à jour
+let usersPositions = [];
+
+// Servez les fichiers statiques (par exemple, un fichier HTML dans un dossier "public")
 app.use(express.static(path.join(__dirname, "public")));
 
+// Route pour la racine du site, renvoie un fichier HTML
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 // Endpoint pour récupérer les positions des utilisateurs
-let usersPositions = [];
 app.get("/positions", (req, res) => {
     res.json(usersPositions);
 });
 
-// Ajouter une position d'utilisateur
+// Ajouter ou mettre à jour la position d'un utilisateur
 app.post("/position", (req, res) => {
     const { id, lat, lon } = req.body;
-    const user = { id, lat, lon };
+
+    // Vérifier si l'utilisateur existe déjà dans la liste
+    const userIndex = usersPositions.findIndex(user => user.id === id);
+
+    if (userIndex !== -1) {
+        // Si l'utilisateur existe, on supprime son ancienne position
+        usersPositions.splice(userIndex, 1);
+    }
+
+    // Ajouter la nouvelle position de l'utilisateur avec un horodatage
+    const user = { id, lat, lon, lastUpdated: Date.now() };
     usersPositions.push(user);
     res.status(201).json(user);
 });
+
+// Fonction pour supprimer tous les utilisateurs
+function removeAllUsers() {
+    usersPositions = [];
+    console.log("Tous les utilisateurs ont été supprimés.");
+}
+
+// Endpoint pour supprimer tous les utilisateurs
+app.delete("/users", (req, res) => {
+    removeAllUsers();
+    res.status(200).send("Tous les utilisateurs ont été supprimés.");
+});
+
+// Fonction pour supprimer les utilisateurs inactifs
+function removeInactiveUsers() {
+    const currentTime = Date.now();
+    const activeUsers = usersPositions.filter(user => currentTime - user.lastUpdated < 5 * 60 * 1000);
+    usersPositions = activeUsers;
+    console.log("Utilisateurs inactifs supprimés.");
+}
+
+// Supprimer les utilisateurs inactifs toutes les 5 minutes
+setInterval(removeInactiveUsers, 5 * 60 * 1000);
 
 const server = app.listen(port, () => {
     console.log(`Serveur en écoute sur http://localhost:${port}`);
