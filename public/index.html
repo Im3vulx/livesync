@@ -23,36 +23,38 @@
         </div>
     </div>
 
-    <section id="container">
-        <div id="map"></div>
+    <section id="container" style="display: none;">
+        <div class="container">
+            <div id="map" style="height: 500px;"></div>
 
-        <h2>Accéléromètre</h2>
-        <div id="acceleration-container">
-            <div id="acceleration">
-                <p><strong>X:</strong> <span id="xValue">0</span></p>
-                <p><strong>Y:</strong> <span id="yValue">0</span></p>
-                <p><strong>Z:</strong> <span id="zValue">0</span></p>
-            </div>
+            <h2>Accéléromètre</h2>
+            <div id="acceleration-container">
+                <div id="acceleration">
+                    <p><strong>X:</strong> <span id="xValue">0</span></p>
+                    <p><strong>Y:</strong> <span id="yValue">0</span></p>
+                    <p><strong>Z:</strong> <span id="zValue">0</span></p>
+                </div>
 
-            <div id="rotation">
-                <p><strong>Alpha:</strong> <span id="alphaValue">0</span></p>
-                <p><strong>Beta:</strong> <span id="betaValue">0</span></p>
-                <p><strong>Gamma:</strong> <span id="gammaValue">0</span></p>
+                <div id="rotation">
+                    <p><strong>Alpha:</strong> <span id="alphaValue">0</span></p>
+                    <p><strong>Beta:</strong> <span id="betaValue">0</span></p>
+                    <p><strong>Gamma:</strong> <span id="gammaValue">0</span></p>
+                </div>
             </div>
         </div>
+        <section id="user-list-container">
+            <h2>Utilisateurs connectés</h2>
+            <ul id="user-list"></ul>
+        </section>
+    </section>
 
-        <div id="video-container" class="video-section">
-            <div class="video-controls">
-                <button id="startVideo" class="video-button">Démarrer Visio</button>
-                <button id="stopVideo" class="video-button">Arrêter Visio</button>
-            </div>
-
-            <div class="video-grid">
-                <div class="local-video-container">
-                    <video id="localVideo" autoplay playsinline muted></video>
-                </div>
-                <div id="remoteVideos" class="remote-videos"></div>
-            </div>
+    <section id="conversation-container" style="display: none;">
+        <h3>Conversation avec <span id="conversation-with"></span></h3>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Écrire un message..." />
+        <div class="button-container">
+            <button onclick="sendChatMessage()">Envoyer</button>
+            <button onclick="closeConversation()">Fermer</button>
         </div>
     </section>
 

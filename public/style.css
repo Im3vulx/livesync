@@ -5,6 +5,14 @@ body {
     padding: 0;
 }
 
+section#container {
+    justify-content: space-evenly;
+}
+
+.container {
+    width: 100%;
+}
+
 #pseudo-container {
     padding: 20px;
 }
@@ -26,74 +34,6 @@ body {
     gap: 20px;
     justify-content: center;
     align-items: center;
-}
-
-.video-section {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f5f5f5;
-    border-radius: 8px;
-}
-
-.video-controls {
-    margin-bottom: 15px;
-    text-align: center;
-}
-
-.video-button {
-    padding: 10px 20px;
-    margin: 0 10px;
-    background: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.video-button:hover {
-    background: #45a049;
-}
-
-.video-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-}
-
-.local-video-container {
-    position: relative;
-}
-
-video {
-    width: 100%;
-    max-width: 400px;
-    border-radius: 8px;
-    background: #000;
-}
-
-.volume-meter {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    width: 20px;
-    height: 100px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.volume-level {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: #4CAF50;
-    transition: height 0.1s ease;
-}
-
-.remote-videos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 10px;
 }
 
 h1,
@@ -170,15 +110,47 @@ button:hover {
     font-size: 16px;
 }
 
-/* Vidéos */
-#video-container {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
+#user-list-container {
+    padding: 15px;
 }
 
-video {
-    width: 45%;
+.user-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.message-button,
+.call-button {
+    display: block;
+    margin: 5px auto;
+    padding: 5px 10px;
+    font-size: 14px;
+    color: #fff;
+    background: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.message-button:hover,
+.call-button:hover {
+    background: #0056b3;
+}
+
+#conversation-container {
+    padding: 20px;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
 }
 
 /* Responsive Design */
@@ -189,5 +161,9 @@ video {
 
     form {
         padding: 15px;
+    }
+
+    section#container {
+        flex-direction: column;
     }
 }

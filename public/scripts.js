@@ -4,6 +4,7 @@ let locationWatchId = null;
 let retryCount = 0;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000;
+let connectedUsers = [];
 
 // Écouter l'événement de soumission du formulaire du pseudo
 document.getElementById('submit-pseudo').addEventListener('click', async function () {
@@ -17,7 +18,7 @@ document.getElementById('submit-pseudo').addEventListener('click', async functio
         await checkGeolocationAvailability();
 
         document.getElementById('pseudo-container').style.display = 'none';
-        document.getElementById('container').style.display = 'block';
+        document.getElementById('container').style.display = 'flex';
 
         if (!map) {
             initMap();
@@ -43,6 +44,7 @@ document.getElementById('submit-pseudo').addEventListener('click', async functio
     }
 });
 
+// Vérifier la disponibilité de la géolocalisation
 function checkGeolocationAvailability() {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
@@ -76,6 +78,7 @@ function initMap() {
     }
 }
 
+// Gestion du fallback en cas d'échec de la géolocalisation
 function handleFallback() {
     console.log('Utilisation de la position par défaut');
     const fallbackLat = 48.8566;
@@ -91,6 +94,7 @@ function handleFallback() {
     alert('La géolocalisation a échoué. Vérifiez vos paramètres et réessayez.');
 }
 
+// Obtenir la position de l'utilisateur
 function getUserPosition() {
     if (!map) {
         console.warn('Carte non initialisée. Tentative d\'initialisation...');
@@ -146,6 +150,7 @@ function getUserPosition() {
     }
 }
 
+// Envoyer la position de l'utilisateur au serveur
 function sendPositionToServer(lat, lon) {
     const pseudo = localStorage.getItem('pseudo');
     fetch('/position', {
@@ -154,7 +159,7 @@ function sendPositionToServer(lat, lon) {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            id: pseudo || 'utilisateur-local',
+            pseudo: pseudo || 'utilisateur-local',
             lat: lat,
             lon: lon
         })
@@ -169,6 +174,8 @@ const socket = new WebSocket("ws://localhost:8080");
 
 socket.onmessage = (event) => {
     const usersPositions = JSON.parse(event.data);
+    connectedUsers = usersPositions;
+    updateUserList();
 
     if (!map) {
         console.warn('Carte non initialisée');
@@ -180,8 +187,9 @@ socket.onmessage = (event) => {
 
     usersPositions.forEach(user => {
         if (user.lat && user.lon) {
+            // Utilisation du pseudo dans le pop-up
             const marker = L.marker([user.lat, user.lon]).addTo(map)
-                .bindPopup(`<b>Utilisateur</b><br>ID: ${user.id}<br>Latitude: ${user.lat}<br>Longitude: ${user.lon}`);
+                .bindPopup(`<b>${user.pseudo || user.id}</b><br>Latitude: ${user.lat}<br>Longitude: ${user.lon}`);
             userMarkers.push(marker);
         }
     });
@@ -195,16 +203,62 @@ socket.onclose = (event) => {
     console.log('Connexion WebSocket fermée :', event);
 };
 
-// Gestion des permissions de l'accéléromètre
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-            const permissionState = await DeviceMotionEvent.requestPermission();
-            if (permissionState !== 'granted') {
-                throw new Error('Accès refusé à l\'accéléromètre');
-            }
-        }
-    } catch (error) {
-        console.error('Erreur d\'accès à l\'accéléromètre :', error);
+// Met à jour la liste des utilisateurs connectés
+function updateUserList() {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    connectedUsers.forEach(user => {
+        const userItem = document.createElement('div');
+        userItem.className = 'user-item';
+
+        // Affichage du pseudo
+        const userName = localStorage.getItem('pseudo') || user.id;
+        userItem.innerHTML = `
+            <p><strong>${userName}</strong></p>
+            <button class="message-button" onclick="sendMessage('${user.pseudo}')">Message</button>
+            <button class="call-button" onclick="startCall('${user.pseudo}')">Appel FaceTime</button>
+        `;
+        userList.appendChild(userItem);
+    });
+}
+
+// Envoi du message
+function sendMessage(userPseudo) {
+    const user = connectedUsers.find(u => localStorage.getItem('pseudo') === userPseudo);
+    const userName = user ? user.pseudo : localStorage.getItem('pseudo');
+
+    document.getElementById('conversation-with').innerText = userName;
+    document.getElementById('conversation-container').style.display = 'flex';
+    
+    const messagesDiv = document.getElementById('messages');
+    messagesDiv.innerHTML += `<div><strong>Vous :</strong> Salut ${userName} !</div>`;
+}
+
+// Démarrage de l'appel FaceTime
+function startCall(userPseudo) {
+    const isAppleDevice = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (isAppleDevice) {
+        const facetimeUrl = `facetime://${userPseudo}`;
+        window.location.href = facetimeUrl;
+    } else {
+        alert(`FaceTime n'est disponible que sur des appareils Apple. Impossible de démarrer un appel.`);
     }
-});
+}
+
+// Envoi du message du chat
+function sendChatMessage() {
+    const message = document.getElementById('message-input').value;
+    if (message.trim()) {
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.innerHTML += `<div><strong>Vous :</strong> ${message}</div>`;
+        document.getElementById('message-input').value = '';
+    }
+}
+
+// Fermer la conversation
+function closeConversation() {
+    document.getElementById('conversation-container').style.display = 'none';
+    document.getElementById('messages').innerHTML = '';
+}
